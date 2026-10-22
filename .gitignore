@@ -3,10 +3,17 @@
 venv/
 env/
 
-# Python caches
+# Python caches and build artifacts
 __pycache__/
 *.py[cod]
+*.pyd
 *.pyo
+.Python
+*.egg
+*.egg-info/
+build/
+dist/
+*.so
 
 # Test and coverage output
 .pytest_cache/
@@ -21,8 +28,14 @@ htmlcov/
 .env.*
 !.env.example
 
-# Editor and OS files
+# Editor files
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# OS files
 .DS_Store
+.AppleDouble
+.LSOverride
 Thumbs.db
