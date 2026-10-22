@@ -1,0 +1,20 @@
+:root {
+    --accent: #0f766e;
+    --ink: #17324d;
+    --surface: #f4f8f7;
+}
+
+.stApp {
+    background: var(--surface);
+    color: var(--ink);
+}
+
+h1, h2, h3 {
+    color: var(--ink);
+}
+
+.stButton > button {
+    background: var(--accent);
+    color: white;
+    border: 0;
+}
