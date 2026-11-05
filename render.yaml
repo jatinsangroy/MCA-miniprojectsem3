@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: pathforge-ai
+    runtime: docker
+    region: singapore
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: CREWAI_DISABLE_TELEMETRY
+        value: "true"
+      - key: LITELLM_DISABLE_PROMPT_CACHING
+        value: "true"
+      - key: GROQ_API_KEY
+        sync: false        # Add this manually in Render dashboard → Environment
+      - key: GROQ_MODEL
+        value: "qwen/qwen3.8-27b"
+    healthCheckPath: /health
+    autoDeploy: true

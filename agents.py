@@ -48,29 +48,21 @@ _exp_exec.mark_cache_breakpoint = _noop_mark_cache_breakpoint
 # Shared LLM factory (temperature tuned per agent role)
 # ---------------------------------------------------------------------------
 
-def _llm(temperature: float = 0.3) -> LLM:
+def _llm(temperature: float = 0.3, api_key_env: str = "GROQ_API_KEY") -> LLM:
     """
     Return a CrewAI LLM instance backed by Groq (via litellm).
 
     Priority:
-      1. GROQ_API_KEY  → uses groq/<GROQ_MODEL> via litellm
+      1. Specified Groq key (`api_key_env`, fallback to `GROQ_API_KEY`) → uses groq/<GROQ_MODEL>
       2. OPENAI_API_KEY → falls back to openai/<OPENAI_MODEL>
-
-    Set in .env:
-        GROQ_API_KEY=gsk_...
-        GROQ_MODEL=qwen/qwen3.8-27b   # optional, default shown
-
-    Rate-limit handling:
-        num_retries=3 with exponential backoff is enabled via litellm.
-        request_timeout=120 gives each call up to 2 min before giving up.
     """
     # Always re-read from env so restarts pick up .env changes cleanly
     load_dotenv(override=True)
-    groq_key = os.getenv("GROQ_API_KEY")
-    openai_key = os.getenv("OPENAI_API_KEY")
+    groq_key = (os.getenv(api_key_env) or os.getenv("GROQ_API_KEY") or "").strip()
+    openai_key = (os.getenv("OPENAI_API_KEY") or "").strip()
 
     if groq_key:
-        model_name = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
+        model_name = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b").strip()
         # Strip any accidental prefix duplication
         if not model_name.startswith("groq/"):
             full_model = f"groq/{model_name}"
@@ -80,9 +72,10 @@ def _llm(temperature: float = 0.3) -> LLM:
             model=full_model,
             temperature=temperature,
             api_key=groq_key,
+            max_tokens=900,      # Keep token usage low to stay under Groq free-tier TPM limits
             caching=False,       # Groq rejects cache_breakpoint header
-            num_retries=3,       # Auto-retry on rate limit / transient errors
-            request_timeout=120, # 2-min timeout per call
+            num_retries=2,       # Auto-retry on transient rate-limit errors
+            request_timeout=90,
         )
     elif openai_key:
         model_name = os.getenv("OPENAI_MODEL", "gpt-4o")
@@ -240,7 +233,7 @@ def create_assessment_adapter_agent() -> Agent:
         ),
         verbose=True,
         allow_delegation=False,
-        llm=_llm(temperature=0.3),
+        llm=_llm(temperature=0.3, api_key_env="GROQ_ASSESSMENT_API_KEY"),
     )
 
 
